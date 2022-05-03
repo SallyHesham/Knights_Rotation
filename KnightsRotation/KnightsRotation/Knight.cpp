@@ -7,6 +7,6 @@ Knight::Knight(int n, char t)
 	type = t;
 	pos = n;
 	finished = false;
-	posatroute = 0;
+	routeIndex = 0;
 
 }

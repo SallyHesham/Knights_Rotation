@@ -11,7 +11,7 @@ public:
 	vector<int> route;
 	bool finished;
 	int pos;
-	int posatroute;
+	int routeIndex;
 	Knight(int n, char t);
 };
 

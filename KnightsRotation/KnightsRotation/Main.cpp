@@ -1,36 +1,66 @@
 #include <stdlib.h>
+#include <iostream>
 #include "Knight.h"
 #include "Node.h"
-#include "Globals.h"
 using namespace std;
 
+//globals
 Knight* board[12];
 Node* map[12];
 int bd[3];
 int wd[3];
+Knight* last;
+int moves = 0;
 
+//functions
 void initialize();
+void move(Knight* to, Knight* from);
+void shortestRoute(Knight* kn, int restricted);
+void moveToDestination(Knight* kn);
+void moveOutOfWay(Knight* kn);
+bool collision(Knight* kn1, Knight* kn2);
+bool done();
+void printBoard();
 
+//main loop
 int main() {
+	initialize();
+	last = board[0];
 
+	while (!done() && !last->finished) {
+		move(last, nullptr);
+	}
+
+	int index = 0;
+	while (!done()) {
+		if (board[index] != nullptr) {
+			if (!board[index]->finished) {
+				move(board[index], nullptr);
+			}
+		}
+		index++;
+	}
+
+	cout << "Number of moves is: " << moves << endl;
 	return 0;
 }
 
+//initialization function
 void initialize() {
 
 	//initializing board
-	board[0] = new Knight(0, 'b');
-	board[1] = new Knight(1, 'b');
-	board[2] = new Knight(2, 'b');
+	board[0] = new Knight(0, 'B');
+	board[1] = new Knight(1, 'B');
+	board[2] = new Knight(2, 'B');
 	board[3] = nullptr;
 	board[4] = nullptr;
 	board[5] = nullptr;
 	board[6] = nullptr;
 	board[7] = nullptr;
 	board[8] = nullptr;
-	board[9] = new Knight(9, 'w');
-	board[10] = new Knight(10, 'w');
-	board[11] = new Knight(11, 'w');
+	board[9] = new Knight(9, 'W');
+	board[10] = new Knight(10, 'W');
+	board[11] = new Knight(11, 'W');
 
 	//initializing map which contains available moves for each tile
 	map[0] = new Node(0, nullptr);
@@ -81,4 +111,137 @@ void initialize() {
 	wd[0] = 0;
 	wd[1] = 1;
 	wd[2] = 2;
+}
+
+//main problem solving function
+//commands a knight to move
+//order usually given "from" a knight "to" a knight
+void move(Knight* to, Knight* from)
+{
+	//determines shortest route for the "to" knight
+	if (to->finished) return;
+	if (to->dest == -1) {
+		if (from == nullptr) {
+			shortestRoute(to, -1);
+		}
+		else {
+			shortestRoute(to, from->name);
+		}
+	}
+	//determines if destination is occupied
+	Knight* obstacle = board[to->dest];
+	if (obstacle != nullptr) {
+		if (obstacle->dest == -1) {
+			shortestRoute(obstacle, to->name);
+		}
+		//determines if collision will occur, and solves it
+		if (collision(to, obstacle)) {
+			Knight* moved;
+			if (to->route.size() > obstacle->route.size()) {
+				moved = to;
+				moveOutOfWay(to);
+			}
+			else {
+				moved = obstacle;
+				moveOutOfWay(obstacle);
+			}
+			last = moved;
+			if (board[to->dest] == nullptr) {
+				moveToDestination(to);
+				return;
+			}
+		}
+		//commands occupying knight to move
+		move(obstacle, to);
+	}
+	//moves to destination after all obstacles and collisions have been resolved
+	moveToDestination(to);
+	return;
+}
+
+//determines shortest route for a given knight
+void shortestRoute(Knight* kn, int restricted)
+{
+
+}
+
+//safely moves knight to chosen destination
+void moveToDestination(Knight* kn)
+{
+	while (kn->routeIndex + 1 < kn->route.size()) {
+		int nextStep = kn->route[kn->routeIndex + 1];
+		if (board[nextStep] != nullptr) return;
+		else {
+			board[nextStep] = kn;
+			board[kn->pos] = nullptr;
+			kn->routeIndex++;
+			kn->pos = nextStep;
+			moves++;
+			printBoard();
+		}
+	}
+	kn->finished = true;
+	return;
+}
+
+//moves knight out of way in case of collision
+void moveOutOfWay(Knight* kn)
+{
+	int nextStep = kn->route[kn->routeIndex + 1];
+	if (board[nextStep] != nullptr) {
+		nextStep = kn->route[kn->routeIndex - 1];
+		board[nextStep] = kn;
+		board[kn->pos] = nullptr;
+		kn->routeIndex--;
+		kn->pos = nextStep;
+		moves++;
+		printBoard();
+	}
+	else {
+		moveToDestination(kn);
+	}
+	return;
+}
+
+//checks for collisions in two given knights' routes
+bool collision(Knight* kn1, Knight* kn2)
+{
+	int commonNodes = 0;
+	for (int x = 0; x < kn1->route.size(); x++) {
+		for (int y = 0; y < kn2->route.size(); y++) {
+			if (kn1->route[x] == kn2->route[y]) {
+				commonNodes++;
+			}
+		}
+	}
+	if (commonNodes > 1) return true;
+	else return false;
+}
+
+//checks whether all knights have reached their destinations or not
+bool done()
+{
+	for (int i = 0; i < 12; i++) {
+		if (board[i] == nullptr) continue;
+		else {
+			if (!board[i]->finished) return false;
+		}
+	}
+	return true;
+}
+
+//prints current board layout
+void printBoard()
+{
+	cout << "Move number " << moves;
+	for (int i = 0; i < 12; i++) {
+		if (board[i] == nullptr) {
+			cout << "0\t";
+		}
+		else {
+			cout << board[i]->type << "\t";
+		}
+		if (i % 3 == 2)cout << endl;
+	}
+	cout << endl;
 }

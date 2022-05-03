@@ -144,7 +144,6 @@
     <ClCompile Include="Node.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Globals.h" />
     <ClInclude Include="Knight.h" />
     <ClInclude Include="Node.h" />
   </ItemGroup>
