@@ -1,14 +1,18 @@
 #include <stdlib.h>
 #include <iostream>
+#include <queue>
 #include "Knight.h"
 #include "Node.h"
 using namespace std;
 
+#define DESTNO 3
+#define TILENO 12
+
 //globals
-Knight* board[12];
-Node* map[12];
-int bd[3];
-int wd[3];
+Knight* board[TILENO];
+Node* map[TILENO];
+int bd[DESTNO];
+int wd[DESTNO];
 Knight* last;
 int moves = 0;
 
@@ -162,7 +166,65 @@ void move(Knight* to, Knight* from)
 //determines shortest route for a given knight
 void shortestRoute(Knight* kn, int restricted)
 {
+	Node* cn = new Node(kn->name, nullptr);
+	queue<Node*> q;
+	bool found = false;
+	Node* jackpot = cn;
+	vector<int> dest;
 
+	//determines destinations that can be taken
+	if (kn->type == 'B') {
+		for (int i = 0; i < DESTNO; i++) {
+			if (bd[i] != restricted && bd[i] != -1) {
+				dest.push_back(bd[i]);
+			}
+		}
+	}
+	else {
+		for (int i = 0; i < DESTNO; i++) {
+			if (wd[i] != restricted && wd[i] != -1) {
+				dest.push_back(wd[i]);
+			}
+		}
+	}
+
+	//tries to find chosen destination while trying all routes to choose shortest route
+	while (!found) {
+		vector<Node*> roads = map[cn->name]->children;
+		for (int x = 0; x < roads.size(); x++) {
+			Node* nn = new Node(roads[x]->name, cn);
+			cn->children.push_back(nn);
+			for (int y = 0; y < dest.size(); y++) {
+				if (nn->name == dest[y]) {
+					found = true;
+					jackpot = nn;
+					break;
+				}
+			}
+			q.push(nn);
+		}
+		cn = q.front();
+		q.pop();
+	}
+
+	//extracts and stores proper information about route and destination in knight's attributes
+	vector<int> route;
+	kn->dest = jackpot->name;
+	while (jackpot != nullptr) {
+		route.insert(route.begin(), jackpot->name);
+		jackpot = jackpot->parent;
+	}
+	kn->route = route;
+	if (kn->type == 'B') {
+		for (int in = 0; in < DESTNO; in++) {
+			if (bd[in] == kn->dest) bd[in] = -1;
+		}
+	}
+	else {
+		for (int in = 0; in < DESTNO; in++) {
+			if (wd[in] == kn->dest) wd[in] = -1;
+		}
+	}
 }
 
 //safely moves knight to chosen destination
@@ -221,7 +283,7 @@ bool collision(Knight* kn1, Knight* kn2)
 //checks whether all knights have reached their destinations or not
 bool done()
 {
-	for (int i = 0; i < 12; i++) {
+	for (int i = 0; i < TILENO; i++) {
 		if (board[i] == nullptr) continue;
 		else {
 			if (!board[i]->finished) return false;
@@ -233,8 +295,8 @@ bool done()
 //prints current board layout
 void printBoard()
 {
-	cout << "Move number " << moves;
-	for (int i = 0; i < 12; i++) {
+	cout << "Move number " << moves << endl;
+	for (int i = 0; i < TILENO; i++) {
 		if (board[i] == nullptr) {
 			cout << "0\t";
 		}
@@ -244,4 +306,5 @@ void printBoard()
 		if (i % 3 == 2)cout << endl;
 	}
 	cout << endl;
+	system("pause");
 }
