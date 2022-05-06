@@ -46,6 +46,7 @@ int main() {
 	}
 
 	cout << "Number of moves is: " << moves << endl;
+	system("pause");
 	return 0;
 }
 
@@ -303,7 +304,7 @@ void printBoard()
 		else {
 			cout << board[i]->type << "\t";
 		}
-		if (i % 3 == 2)cout << endl;
+		if (i % 3 == 2)cout << endl << endl;
 	}
 	cout << endl;
 	system("pause");
